@@ -1,0 +1,2 @@
+# MultilingualTranslationTool
+多语翻译一键导入工具
