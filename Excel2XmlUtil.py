@@ -13,6 +13,8 @@
 
 from optparse import OptionParser
 
+from macholib.ptypes import sizeof
+
 import Constant
 from utils.LogUtils import Log
 from utils.ParseUtils import *
@@ -38,16 +40,13 @@ def covertTargetPath(dir_path, language):
 class Excel2XmlUtils:
 
     def __init__(self):
-        self.keyTitle = Constant.Config.keyTitle
+        self.keyTitle = Constant.Config.keyTitle.strip()
         self.moduleTitle = Constant.Config.moduleTitle  # 内容为文件名
         self.targetLanguage = None  # 目标语言，与 filePath 成对使用
         self.filePath = None  # 目标文件路径
         self.dirPath = None  # 目标目录路径
         self.fromIndex = Constant.Config.import_start_col  # 从 fromIndex 开始往后列导入
         pass
-
-    def xls2xml_options(self, options):
-        return self.xls2xml(options.input, options.targetFilePath, options.targetLanguage, options.targetDirPath)
 
     def xls2xml(self, xls_path, file_path, target_language, target_dir_path):
         """
@@ -63,14 +62,13 @@ class Excel2XmlUtils:
             Log.error(Constant.Error(Constant.ERROR_EXCEL_NOT_EXIST).get_desc())
             return Constant.Error(Constant.ERROR_EXCEL_NOT_EXIST)
 
-        xlsPath = xls_path
         self.filePath = file_path
         self.targetLanguage = target_language
         self.dirPath = target_dir_path
 
         # 获取 xls 对象，以及目标 sheet（这里默认为第一张表，index 从0开始）
         xlsParse = XLSParse()
-        xlsParse.open_excel(xlsPath)
+        xlsParse.open_excel(xls_path)
 
         sheet = xlsParse.sheet_by_index(0)
 
@@ -127,8 +125,6 @@ class Excel2XmlUtils:
             Log.debug(Constant.Error(Constant.SUCCESS).get_desc())
             return Constant.Error(Constant.SUCCESS)
 
-        Log.warn("Not a file")
-
         if moduleIndex == -1:
             Log.error(Constant.Error(Constant.ERROR_MODULE_NOT_FOUND).get_desc())
             return Constant.Error(Constant.ERROR_MODULE_NOT_FOUND)
@@ -164,10 +160,11 @@ class Excel2XmlUtils:
             # │   |	├── strings_moment.xml
             # │   ├── values-de
             # │   ├── values-ko
-            sub_dir_path = covertTargetPath(self.dirPath, targetLanguage)
-            # print sub_dir_path
-            if os.path.exists(sub_dir_path):
-                XMLParse.update_multi_xml_value(sub_dir_path, xlsKeys, xlsValues, xlsModules)
+            # sub_dir_path = covertTargetPath(self.dirPath, targetLanguage)
+            # sub_dir_path = self.dirPath + "/" + xlsModules
+            if os.path.exists(self.dirPath):
+                XMLParse.update_multi_xml_value(self.dirPath, xlsKeys, xlsValues, xlsModules)
+            else:Log.debug(f"self.dirPath = {self.dirPath} 路径不存在")
         Log.debug(Constant.Error(Constant.SUCCESS).get_desc())
         return Constant.Error(Constant.SUCCESS)
 

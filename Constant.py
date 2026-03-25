@@ -30,7 +30,7 @@ class Error:
         elif self.code == ERROR_IMPORT_INPUT:
             des = "输入错误，请查看以下项：\n1. 同时输入目标语言和文件，或者输入目标目录;\n2. 表格中不存在目标语言"
         elif self.code == ERROR_KEY_NOT_FOUND:
-            des = "表格结构错误：\n没有检索到 key 列，key 列需命名为 Android keyName"
+            des = "表格结构错误：\n没有检索到 key 列，key 列需命名为 Android Key"
         elif self.code == ERROR_MODULE_NOT_FOUND:
             des = "表格结构错误：\n没有检索到 Module 列，key 列需命名为 Android module"
         elif self.code == EXCEPTION_EXL_FILE:
@@ -49,8 +49,8 @@ class Config:
     def __init__(self):
         pass
 
-    keyTitle = "Android keyName"  # key 名（Android 字符串 name)
-    moduleTitle = "Android module"  # module 名（xml 文件名）
+    keyTitle = "Android Key"  # key 名（Android 字符串 name)
+    moduleTitle = "所属模组"  # module 名（xml 文件名）
     support_custom_ph_rule = False  # 是否支持占位符规则替换 ConvertUtils 中处理
     isShowInfo = True # 是否显示 info 信息
 

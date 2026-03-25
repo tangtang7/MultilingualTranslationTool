@@ -58,15 +58,14 @@ class XMLParse:
             return "ERROR"
 
     @staticmethod
-    def update_multi_xml_value(sub_dir_path, keys, values, modules):
+    def update_multi_xml_value(dir_path, keys, values, modules):
         """
         遍历每个子目录下的文件，把每一种语言的对应 module 下 key 将 value 导入进去
-        :param sub_dir_path: 目标子目录，比如 value-zh
+        :param dir_path: 目标目录，比如 value-zh
         :param keys: 集合，目标目录下所有 key
-        :param values: 集合，目标子目录下所有 value
-        :param modules: 集合，目标子目录下每个 xml 文件的名字（不含.xml)，三个集合元素一一对应
+        :param values: 集合，目标目录下所有 value
+        :param modules: 集合，目标目录下每个 xml 文件的名字（不含.xml)，三个集合元素一一对应
         """
-        Log.debug("\n" + sub_dir_path + "\n")
         if len(modules) == 0:
             return
 
@@ -106,7 +105,7 @@ class XMLParse:
             subValues = values_new[start:end]
             module = modules_new[start]
             start += module_len
-            filePath = sub_dir_path + module + ".xml"
+            filePath = dir_path + module + ".xml"
 
             XMLParse.update_xml_value(filePath, subKeys, subValues)
 
@@ -223,11 +222,15 @@ def update_xml_base_xls(xml_doc, keys, values):
     # 数组 （考虑到数组顺序问题，数组暂不支持对标 xls 添加）
     Log.debug("--- array ---")
     array_nodes = xml_doc.getElementsByTagName('string-array')
+    Log.debug(f"array_nodes = {array_nodes}")
     for array_node in array_nodes:
         xmlKey = array_node.getAttribute('name')
+        Log.debug(f"xmlKey = {xmlKey}")
         child_nodes = array_node.getElementsByTagName('item')
+        Log.debug(f"child_nodes = {child_nodes}")
         for idx, child_node in enumerate(child_nodes):
             newKey = convertStringArrayName(xmlKey, str(idx))
+            Log.debug(f"newKey = {newKey}")
             if child_node.firstChild is None:
                 # 处理空字符串，比如  <string name="ok"></string>
                 xmlValue = ""
@@ -235,6 +238,7 @@ def update_xml_base_xls(xml_doc, keys, values):
                 xmlValue = child_node.firstChild.data
             for index, key in enumerate(keys):
                 value = formatCell(values[index])
+                Log.debug(f"value = {value}")
                 if key == newKey:
                     child_node.firstChild.data = value
                     break

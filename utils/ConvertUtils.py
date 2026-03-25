@@ -51,11 +51,6 @@ def replace_quotation_to_xml(base_str, change_word):
     return new_str
 
 def convert_str_to_xml(base_str) -> str:
-    """ 将 excel 占位符转化成 xml 中可用占位符
-    转换字符串
-    :param base_str: 源字符串
-    :return: 转换后的字符串
-    """
     # 将 $$1s格式的字符串 替换为 %1s
     pattern = re.compile(r'\$\$\d[a-zA-Z]')
     replace_list = pattern.findall(base_str)
@@ -70,8 +65,10 @@ def convert_str_to_xml(base_str) -> str:
     for replace in replace_list2:
         temp_result2 = replace_placeholder_to_xml(temp_result2, replace)
 
-    # 将 '（字母' 或 空白字符'） 替换为 \'
+    # 将 '（未转义的'） 替换为 \'
     # pattern3 = re.compile(r'[a-zA-Z\s]\'')
+    # pattern3 = re.compile(r'[^\\](\')|(\‘)|(\’)')
+    # pattern3 = re.compile(r'[^\\](‘)')
     pattern3 = re.compile(r'[^\\]\'')
     # pattern3 = re.compile(r'[^\\](\')|(\")|(&quot;)')
     replace_list3 = pattern3.findall(temp_result2)
@@ -79,14 +76,15 @@ def convert_str_to_xml(base_str) -> str:
     for replace in replace_list3:
         temp_result3 = replace_quotation_to_xml(temp_result3, replace)
 
-    # 将 "（字母" 或 空白字符"） 替换为 \"
+    # 将 "（未转义的"） 替换为 \"
+    # pattern4 = re.compile(r'[^\\](\")|(\“)|(\”)')
     pattern4 = re.compile(r'[^\\]\"')
     replace_list4 = pattern4.findall(temp_result3)
     temp_result4 = temp_result3
     for replace in replace_list4:
         temp_result4 = replace_quotation_to_xml(temp_result4, replace)
 
-    # 将 "（字母" 或 空白字符"） 替换为 \"
+    # 将 "（未转义的 &quot;） 替换为 \"
     pattern5 = re.compile(r'[^\\]&quot;')
     replace_list5 = pattern5.findall(temp_result4)
     temp_result5 = temp_result4
@@ -110,3 +108,49 @@ def convert_str_to_xml(base_str) -> str:
     pattern8 = re.compile(r' ')
     temp_result9 = re.sub(pattern8, " ", temp_result8)
     return temp_result9
+
+    # # 将 "（未转义的"） 替换为 \"
+    # pattern6 = re.compile(r'[^\\](“)')
+    # replace_list6 = pattern6.findall(temp_result5)
+    # temp_result6 = temp_result5
+    # for replace in replace_list6:
+    #     temp_result6 = replace_quotation_to_xml(temp_result6, replace)
+    #
+    # # 将 "（未转义的"） 替换为 \"
+    # pattern7 = re.compile(r'[^\\](”)')
+    # replace_list7 = pattern7.findall(temp_result6)
+    # temp_result7 = temp_result6
+    # for replace in replace_list7:
+    #     temp_result7 = replace_quotation_to_xml(temp_result7, replace)
+    #
+    # # 将 "（未转义的"） 替换为 \"
+    # pattern8 = re.compile(r'[^\\](‘)')
+    # replace_list8 = pattern8.findall(temp_result7)
+    # temp_result8 = temp_result7
+    # for replace in replace_list8:
+    #     temp_result8 = replace_quotation_to_xml(temp_result8, replace)
+    #
+    # # 将 "（未转义的"） 替换为 \"
+    # pattern9 = re.compile(r'[^\\](’)')
+    # replace_list9 = pattern9.findall(temp_result8)
+    # temp_result9 = temp_result8
+    # for replace in replace_list9:
+    #     temp_result9 = replace_quotation_to_xml(temp_result9, replace)
+    #
+    # # 删除字符串结尾的换行和空白符号
+    # pattern10 = re.compile(r'(\n$)|(\s$)')
+    # # 字符串开头的空白符号暂时保留
+    # # pattern6 = re.compile(r'(^\s)|(\n$)|(\s$)')
+    # temp_result10 = re.sub(pattern10, "", temp_result9)
+    #
+    # # 将 换行符 替换为 \n
+    # pattern11 = re.compile(r'\n')
+    # enter1 = "\\\n"
+    # enter2 = "n"
+    # temp_result11 = re.subn(pattern11, enter1, temp_result10)[0]
+    # temp_result12 = re.subn(pattern11, enter2, temp_result11)[0]
+    #
+    # # 将 非换行空格 替换为 普通空格
+    # pattern12 = re.compile(r' ')
+    # temp_result13 = re.sub(pattern12, " ", temp_result12)
+    # return temp_result13
