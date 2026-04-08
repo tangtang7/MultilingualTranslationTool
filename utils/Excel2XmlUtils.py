@@ -2,25 +2,24 @@
 Excel 读取与批量写入 xml 的工具。
 """
 import os
+import csv
 from utils.XmlUtils import update_xml_value
 from utils.LogUtils import Log
 
 def read_excel(excel_path):
     """
-    读取 .xls 或 .xlsx 文件，返回 header, rows（表头，数据行）
+    读取 .xls、.xlsx 或 .csv 文件，返回 header, rows（表头，数据行）
     :param excel_path: 表格文件路径
     :return: header, rows（表头，数据行）
     """
     # 获取文件扩展名
     ext = os.path.splitext(excel_path)[1].lower()
-    # 初始化表头和数据行
+    # 初始化表头和数据行。取表格第一行为表头，其余为数据行
     header, rows = [], []
     # xlrd 处理 .xls 文件。
     if ext == '.xls':
         import xlrd
-        # 打开 Excel 文件
         wb = xlrd.open_workbook(excel_path)
-        # 取表格第一行为表头，其余为数据行
         sheet = wb.sheet_by_index(0)
         header = [str(x) for x in sheet.row_values(0)]
         for i in range(1, sheet.nrows):
@@ -30,16 +29,24 @@ def read_excel(excel_path):
         import openpyxl
         # 只读方式打开
         wb = openpyxl.load_workbook(excel_path, read_only=True, data_only=True)
-        # 取表格第一行为表头，其余为数据行
         ws = wb.active
         for i, row in enumerate(ws.iter_rows(values_only=True)):
             if i == 0:
                 header = [str(cell) if cell is not None else '' for cell in row]
             else:
                 rows.append([str(cell) if cell is not None else '' for cell in row])
+    # csv 处理 .csv 文件
+    elif ext == '.csv':
+        with open(excel_path, newline='', encoding='utf-8-sig') as csvfile:
+            reader = csv.reader(csvfile)
+            for i, row in enumerate(reader):
+                if i == 0:
+                    header = [str(cell) if cell is not None else '' for cell in row]
+                else:
+                    rows.append([str(cell) if cell is not None else '' for cell in row])
     # 不支持的格式报错
     else:
-        raise Exception('仅支持 .xls 或 .xlsx 文件')
+        raise Exception('仅支持 .xls、.xlsx 或 .csv 文件')
     return header, rows
 
 # 读取 Excel，每行以本行“所属模组”为 xml 文件名，按各语言写入对应 xml。

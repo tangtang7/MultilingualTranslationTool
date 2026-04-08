@@ -45,8 +45,8 @@ python MowerPdiCovert.py
 
 ## 注意事项
 
-- 仅支持 `.xls` 和 `.xlsx` 格式的 Excel 文件。
-- Excel 表头需包含“所属模组”和“Android Key”两列。
+- 支持 `.xls`、`.xlsx` 和 `.csv` 格式的表格文件。
+- Excel 或 CSV 表头需包含“所属模组”和“Android Key”两列。
 - 语言列名需与代码中的 `lang_map` 保持一致。
 - 若 xml 文件不存在 key，则自动追加。
 - 所有 value 在写入 xml 前会自动进行占位符/格式化字符串转换（如 $$1s → %1$s）。
