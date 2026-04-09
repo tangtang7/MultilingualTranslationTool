@@ -50,9 +50,13 @@ def update_xml_value(xml_path, keys, values):
 def update_xml_string_array(xml_path, array_name, items):
     """
     更新或追加 <string-array> 节点。若 xml 文件不存在则跳过。若 key 已存在则替换，否则追加。
+    <string-array name="xx">
+        <!--数字-->
+        <item>value</item>
+    </string-array>
     :param xml_path: xml 文件路径
     :param array_name: 数组名
-    :param items: [(index, value), ...]，按 index 排序
+    :param items: [(index, value), ...]，按 index 排序。若缺少中间的某个 index 则展示为 <item />
     """
     Log.debug(f"--- updating string-array: {xml_path} name={array_name}")
     if not os.path.exists(xml_path):
@@ -73,19 +77,25 @@ def update_xml_string_array(xml_path, array_name, items):
         root.appendChild(arr_node)
     # 按 index 排序
     items_sorted = sorted(items, key=lambda x: x[0])
-    for i, (idx, value) in enumerate(items_sorted):
-        # 添加换行（首项前也加）
-        arr_node.appendChild(xml_doc.createTextNode('\n'))
+    indices = [idx for idx, _ in items_sorted]
+    if not indices:
+        return
+    min_idx = min(indices)
+    max_idx = max(indices)
+    idx_map = {idx: value for idx, value in items_sorted}
+    for idx in range(min_idx, max_idx + 1):
+        # 添加换行和间隔（首项前也加）
+        arr_node.appendChild(xml_doc.createTextNode('\n        '))
         # 添加注释 <!--数字-->
         comment = xml_doc.createComment(str(idx))
         arr_node.appendChild(comment)
-        # 注释和 item 之间换行
-        arr_node.appendChild(xml_doc.createTextNode('\n'))
-        # 添加 <item>value</item>
+        # 注释和 item 之间换行和间隔
+        arr_node.appendChild(xml_doc.createTextNode('\n        '))
         item_node = xml_doc.createElement('item')
-        item_node.appendChild(xml_doc.createTextNode(str(value)))
+        if idx in idx_map:
+            item_node.appendChild(xml_doc.createTextNode(str(idx_map[idx])))
         arr_node.appendChild(item_node)
-    # 末尾再加换行
-    arr_node.appendChild(xml_doc.createTextNode('\n'))
+    # 末尾换行和间隔
+    arr_node.appendChild(xml_doc.createTextNode('\n    '))
     with open(xml_path, 'wb') as f:
         f.write(xml_doc.toxml('utf-8'))
