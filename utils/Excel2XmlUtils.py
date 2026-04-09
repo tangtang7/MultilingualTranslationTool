@@ -78,20 +78,20 @@ def excel2xml(xml_path, excel_path):
 
     # 语言列名与目录映射
     lang_map = {
-        "英文（文案组）": "values-en",
-        "Afar-aa(最长文案)": "values-aa",
-        "bg-BG Bulgarian (保加利亚语)": "values-bg",
-        "de-DE（德语）": "values-de",
-        "es-ES（西班牙语）": "values-es",
-        "fr-FR（法语）": "values-fr",
-        "hu-HU Hungarian (匈牙利语)": "values-hu",
-        "it-IT（意大利语）": "values-it",
-        "lt-LT Lithuanian (立陶宛语)": "values-lt",
-        "pt-PT（葡萄牙语）": "values-pt",
-        "中文需求描述（CN）": "values-zh",
-        "pl-PL（波兰语）": "values-pl",
-        "nl-NL（荷兰语）": "values-nl",
-        "no-NO（挪威语）": "values-no"
+        "英文（文案组）": ["values-en", "values"],  # Write to both values-en and values
+        "Afar-aa(最长文案)": ["values-aa"],
+        "bg-BG Bulgarian (保加利亚语)": ["values-bg"],
+        "de-DE（德语）": ["values-de"],
+        "es-ES（西班牙语）": ["values-es"],
+        "fr-FR（法语）": ["values-fr"],
+        "hu-HU Hungarian (匈牙利语)": ["values-hu"],
+        "it-IT（意大利语）": ["values-it"],
+        "lt-LT Lithuanian (立陶宛语)": ["values-lt"],
+        "pt-PT（葡萄牙语）": ["values-pt"],
+        "中文需求描述（CN）": ["values-zh"],
+        "pl-PL（波兰语）": ["values-pl"],
+        "nl-NL（荷兰语）": ["values-nl"],
+        "no-NO（挪威语）": ["values-no"]
     }
     # 找到所有语言列的索引
     lang_col_map = {col: idx for idx, col in enumerate(header) if col in lang_map}
@@ -112,7 +112,7 @@ def excel2xml(xml_path, excel_path):
         # 以所属模组命名 xml 文件
         xml_name = f"{module_value}.xml"
         # 遍历所有语言
-        for lang, dir_name in lang_map.items():
+        for lang, dir_names in lang_map.items():
             if lang not in lang_col_map:
                 continue
             # 获取该行该语言的翻译内容
@@ -121,17 +121,17 @@ def excel2xml(xml_path, excel_path):
             if not value:
                 continue
             value = convert_str_to_xml(value)
-            # 组装 xml 文件路径
-            file_path = os.path.join(xml_path, dir_name, xml_name)
-            # 支持 xx-INDEX-数字 形式，string-array name 取 xx
-            array_key_match = re.match(r'^(.*?)(?:-INDEX)?-(\d+)$', key_value)
-            if array_key_match:
-                base_key = array_key_match.group(1)
-                index = int(array_key_match.group(2))
-                array_kv[(file_path, base_key)].append((index, value))
-            else:
-                normal_kv[file_path][0].append(key_value)
-                normal_kv[file_path][1].append(value)
+            for dir_name in dir_names:
+                file_path = os.path.join(xml_path, dir_name, xml_name)
+                # 支持 xx-INDEX-数字 形式，string-array name 取 xx
+                array_key_match = re.match(r'^(.*?)(?:-INDEX)?-(\d+)$', key_value)
+                if array_key_match:
+                    base_key = array_key_match.group(1)
+                    index = int(array_key_match.group(2))
+                    array_kv[(file_path, base_key)].append((index, value))
+                else:
+                    normal_kv[file_path][0].append(key_value)
+                    normal_kv[file_path][1].append(value)
 
     # 先写普通 key
     for file_path, (keys, values) in normal_kv.items():
@@ -145,3 +145,46 @@ def excel2xml(xml_path, excel_path):
         if items:
             update_xml_string_array(file_path, array_name, items)
             Log.debug(f"写入 {file_path}，string-array name={array_name}，items={items}")
+
+def get_all_xml_files_from_excel(xml_path, excel_path):
+    """
+    获取表格中所有涉及的 xml 文件路径。
+    :param xml_path: xml 文件根目录
+    :param excel_path: 表格文件路径
+    :return: set of xml file paths
+    """
+    header, rows = read_excel(excel_path)
+    try:
+        module_col_idx = header.index("所属模组")
+    except ValueError:
+        raise Exception("Excel 中未找到 所属模组 列")
+    lang_map = {
+        "英文（文案组）": ["values-en", "values"],
+        "Afar-aa(最长文案)": ["values-aa"],
+        "bg-BG Bulgarian (保加利亚语)": ["values-bg"],
+        "de-DE（德语）": ["values-de"],
+        "es-ES（西班牙语）": ["values-es"],
+        "fr-FR（法语）": ["values-fr"],
+        "hu-HU Hungarian (匈牙利语)": ["values-hu"],
+        "it-IT（意大利语）": ["values-it"],
+        "lt-LT Lithuanian (立陶宛语)": ["values-lt"],
+        "pt-PT（葡萄牙语）": ["values-pt"],
+        "中文需求描述（CN）": ["values-zh"],
+        "pl-PL（波兰语）": ["values-pl"],
+        "nl-NL（荷兰语）": ["values-nl"],
+        "no-NO（挪威语）": ["values-no"]
+    }
+    lang_col_map = {col: idx for idx, col in enumerate(header) if col in lang_map}
+    xml_files = set()
+    for row in rows:
+        module_value = row[module_col_idx].strip()
+        if not module_value:
+            continue
+        xml_name = f"{module_value}.xml"
+        for lang, dir_names in lang_map.items():
+            if lang not in lang_col_map:
+                continue
+            for dir_name in dir_names:
+                file_path = os.path.join(xml_path, dir_name, xml_name)
+                xml_files.add(file_path)
+    return xml_files
