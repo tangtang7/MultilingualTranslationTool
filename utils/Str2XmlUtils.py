@@ -101,21 +101,18 @@ def convert_str_to_xml(base_str) -> str:
     #     temp_result6 = replace_quotation_to_xml(temp_result6, replace)
 
     # 将非换行空格替换为普通空格
-    pattern7 = re.compile(r'[\xa0\u00a0]')
-    temp_result7 = re.sub(pattern7, " ", temp_result6)
+    pattern7 = re.compile(r'[\xa0|\u00a0| ]')
+    temp_result7 = re.sub(pattern7, r' ', temp_result6)
 
     # 删除字符串结尾的空白符号（包括空格、制表符、回车、换行）
     pattern8 = re.compile(r'[ \t\r\n]+$')
-    temp_result9 = re.sub(pattern8, "", temp_result7)
+    temp_result9 = re.sub(pattern8, r'', temp_result7)
 
     # 删除字符串开头的换行和空白符号
     # pattern9 = re.compile(r'(^\s)|(\n$)|(\s$)')
     # temp_result9 = re.sub(pattern9, "", temp_result8)
 
-    # 将换行符替换为 \\n 和 n
-    pattern10 = re.compile(r'\n')
-    enter1 = "\\\n"
-    enter2 = "n"
-    temp_result10 = re.subn(pattern10, enter1, temp_result9)[0]
-    temp_result11 = re.subn(pattern10, enter2, temp_result10)[0]
-    return temp_result11
+    # 将所有换行符替换为字符串'\\n'（即XML中显示为\n字符）
+    pattern10 = re.compile(r'\r\n|\n')
+    temp_result10 = re.sub(pattern10, r'\\n', temp_result9)
+    return temp_result10
