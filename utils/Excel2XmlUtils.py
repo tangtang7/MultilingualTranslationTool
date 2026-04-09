@@ -3,8 +3,12 @@ Excel 读取与批量写入 xml 的工具。
 """
 import os
 import csv
+import re
 from utils.XmlUtils import update_xml_value
 from utils.LogUtils import Log
+from collections import defaultdict
+from utils.Str2XmlUtils import convert_str_to_xml
+from utils.XmlUtils import update_xml_string_array
 
 def read_excel(excel_path):
     """
@@ -51,6 +55,12 @@ def read_excel(excel_path):
 
 # 读取 Excel，每行以本行“所属模组”为 xml 文件名，按各语言写入对应 xml。
 def excel2xml(xml_path, excel_path):
+    """
+    读取 Excel，每行以本行“所属模组”列为 xml 文件名，按各语言以Android Key 为 name 写入对应 xml。
+    若缺少 “所属模组” 或 “Android Key” 列，报错提示且跳过。
+    :param xml_path: xml 文件路径
+    :param excel_path: 表格文件路径
+    """
     # 读取 Excel 内容
     header, rows = read_excel(excel_path)
     try:
@@ -58,13 +68,13 @@ def excel2xml(xml_path, excel_path):
         module_col_idx = header.index("所属模组")
     except ValueError:
         # 找不到列报错
-        raise Exception("Excel中未找到 所属模组 列")
+        raise Exception("Excel 中未找到 所属模组 列")
     try:
         # 获取“Android Key”列索引
         key_col_idx = header.index("Android Key")
     except ValueError:
         # 找不到列报错
-        raise Exception("Excel中未找到 Android Key 列")
+        raise Exception("Excel 中未找到 Android Key 列")
 
     # 语言列名与目录映射
     lang_map = {
@@ -85,6 +95,10 @@ def excel2xml(xml_path, excel_path):
     }
     # 找到所有语言列的索引
     lang_col_map = {col: idx for idx, col in enumerate(header) if col in lang_map}
+    # 普通 key 收集: {(file_path, lang): ([key], [value])}
+    normal_kv = defaultdict(lambda: ([], []))
+    # 数组项收集: {(file_path, lang, array_name): [(index, value)]}
+    array_kv = defaultdict(list)
 
     # 遍历每一行数据
     for row in rows:
@@ -93,7 +107,7 @@ def excel2xml(xml_path, excel_path):
         # 获取 key
         key_value = row[key_col_idx].strip()
         # 跳过无效行
-        if not module_value or not key_value:
+        if not module_value or not key_value or key_value == '仅适用于iOS':
             continue
         # 以所属模组命名 xml 文件
         xml_name = f"{module_value}.xml"
@@ -106,12 +120,28 @@ def excel2xml(xml_path, excel_path):
             # 跳过无内容的语言
             if not value:
                 continue
-            # 占位符/格式化字符串自动转换（如 $$1s → %1$s）
-            from utils.Str2XmlUtils import convert_str_to_xml
             value = convert_str_to_xml(value)
             # 组装 xml 文件路径
             file_path = os.path.join(xml_path, dir_name, xml_name)
-            # 写入 key-value
-            update_xml_value(file_path, [key_value], [value])
-            # 日志记录
-            Log.debug(f"写入 {file_path}，key={key_value}，value={value}")
+            # 支持 xx-INDEX-数字 形式，string-array name 取 xx
+            array_key_match = re.match(r'^(.*?)(?:-INDEX)?-(\d+)$', key_value)
+            if array_key_match:
+                base_key = array_key_match.group(1)
+                index = int(array_key_match.group(2))
+                array_kv[(file_path, base_key)].append((index, value))
+            else:
+                normal_kv[file_path][0].append(key_value)
+                normal_kv[file_path][1].append(value)
+
+    # 先写普通 key
+    for file_path, (keys, values) in normal_kv.items():
+        if keys:
+            update_xml_value(file_path, keys, values)
+            for k, v in zip(keys, values):
+                Log.debug(f"写入 {file_path}，key={k}，value={v}")
+
+    # 再写数组 key
+    for (file_path, array_name), items in array_kv.items():
+        if items:
+            update_xml_string_array(file_path, array_name, items)
+            Log.debug(f"写入 {file_path}，string-array name={array_name}，items={items}")
