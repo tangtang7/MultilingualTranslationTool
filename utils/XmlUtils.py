@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 """
 Xml 相关操作工具，包括 xml 文件的 key-value 更新与追加。
 """
@@ -12,10 +13,10 @@ def update_xml_value(xml_path, keys, values):
     :param keys: Android key
     :param values: 多语言翻译值
     """
-    Log.debug(f"--- updating xml: {xml_path}")
+    Log.debug("--- updating xml: %s" % xml_path)
     # 检查 xml 文件是否存在
     if not os.path.exists(xml_path):
-        Log.error(f"xml 文件不存在: {xml_path}")
+        Log.error("xml 文件不存在: %s" % xml_path)
         return
 
     # 解析 xml 文件
@@ -43,7 +44,7 @@ def update_xml_value(xml_path, keys, values):
             new_text = xml_doc.createTextNode(str(values[idx]))
             new_node.appendChild(new_text)
             xml_doc.documentElement.appendChild(new_node)
-            Log.info(f"追加新 key: {key} -> {values[idx]}")
+            Log.info("追加新 key: %s -> %s" % (key, values[idx]))
     # 以二进制写入
     with open(xml_path, 'wb') as f:
         # 保存修改后的 xml 内容
@@ -60,9 +61,9 @@ def update_xml_string_array(xml_path, array_name, items):
     :param array_name: 数组名
     :param items: [(index, value), ...]，按 index 排序。若缺少中间的某个 index 则展示为 <item />
     """
-    Log.debug(f"--- updating string-array: {xml_path} name={array_name}")
+    Log.debug("--- updating string-array: %s name=%s" % (xml_path, array_name))
     if not os.path.exists(xml_path):
-        Log.error(f"xml 文件不存在: {xml_path}")
+        Log.error("xml 文件不存在: %s" % xml_path)
         return
     xml_doc = xml.dom.minidom.parse(xml_path)
     root = xml_doc.documentElement
@@ -108,7 +109,7 @@ def sort_xml_strings_and_arrays(xml_path):
     :param xml_path: xml 文件路径
     """
     if not os.path.exists(xml_path):
-        Log.error(f"xml 文件不存在: {xml_path}")
+        Log.error("xml 文件不存在: %s" % xml_path)
         return
     xml_doc = xml.dom.minidom.parse(xml_path)
     root = xml_doc.documentElement

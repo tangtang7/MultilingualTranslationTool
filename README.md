@@ -13,8 +13,9 @@
 
 ## 依赖环境
 
-- Python 3.x  
-  安装方式：已内置于大多数操作系统，或访问 https://www.python.org/downloads/ 下载
+- Python 2.7+（当前工程代码兼容 Python 2.7 与 Python 3）  
+  - macOS 可能默认 `python` 指向 Python 2.7，可用 `python --version` 查看
+  - 若你的环境使用 Python 3，请用 `python3` 执行脚本
 - [xlrd](https://pypi.org/project/xlrd/)（用于读取 .xls 格式的 Excel 文件）  
   安装命令：`pip install xlrd`
 - [openpyxl](https://pypi.org/project/openpyxl/)（用于读取 .xlsx 格式的 Excel 文件）  

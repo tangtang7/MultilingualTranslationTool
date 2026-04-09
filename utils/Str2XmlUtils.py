@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 """
 表格字符串转换为 Android 格式字符串工具。
 """
@@ -52,7 +53,7 @@ def replace_quotation_to_xml(base_str, change_word):
     new_str += base_str
     return new_str
 
-def convert_str_to_xml(base_str) -> str:
+def convert_str_to_xml(base_str):
     """
     将字符串中的占位符、引号、换行等进行批量转换
     :param base_str: 输入字符串

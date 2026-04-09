@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 """
 Excel 读取与批量写入 xml 的工具。
 """
@@ -110,7 +111,7 @@ def excel2xml(xml_path, excel_path):
         if not module_value or not key_value or key_value == '仅适用于iOS':
             continue
         # 以所属模组命名 xml 文件
-        xml_name = f"{module_value}.xml"
+        xml_name = "%s.xml" % module_value
         # 遍历所有语言
         for lang, dir_names in lang_map.items():
             if lang not in lang_col_map:
@@ -138,13 +139,13 @@ def excel2xml(xml_path, excel_path):
         if keys:
             update_xml_value(file_path, keys, values)
             for k, v in zip(keys, values):
-                Log.debug(f"写入 {file_path}，key={k}，value={v}")
+                Log.debug("写入 %s，key=%s，value=%s" % (file_path, k, v))
 
     # 再写数组 key
     for (file_path, array_name), items in array_kv.items():
         if items:
             update_xml_string_array(file_path, array_name, items)
-            Log.debug(f"写入 {file_path}，string-array name={array_name}，items={items}")
+            Log.debug("写入 %s，string-array name=%s，items=%s" % (file_path, array_name, items))
 
 def get_all_xml_files_from_excel(xml_path, excel_path):
     """
@@ -180,7 +181,7 @@ def get_all_xml_files_from_excel(xml_path, excel_path):
         module_value = row[module_col_idx].strip()
         if not module_value:
             continue
-        xml_name = f"{module_value}.xml"
+        xml_name = "%s.xml" % module_value
         for lang, dir_names in lang_map.items():
             if lang not in lang_col_map:
                 continue

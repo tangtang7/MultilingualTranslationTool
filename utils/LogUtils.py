@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 """
 日志工具类，支持 debug/info/error。
 """
