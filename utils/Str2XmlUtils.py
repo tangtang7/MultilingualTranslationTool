@@ -59,8 +59,8 @@ def convert_str_to_xml(base_str) -> str:
     :return: 转换后的字符串
     """
     # 匹配 $$1s 形式的占位符
-    pattern = re.compile(r'\$\$\d[a-zA-Z]')
-    replace_list = pattern.findall(base_str)
+    pattern1 = re.compile(r'\$\$\d[a-zA-Z]')
+    replace_list = pattern1.findall(base_str)
     temp_result1 = base_str
     for replace in replace_list:
         temp_result1 = replace_placeholder_to_xml(temp_result1, replace)
@@ -80,7 +80,7 @@ def convert_str_to_xml(base_str) -> str:
         temp_result3 = replace_quotation_to_xml(temp_result3, replace)
 
     # 匹配未转义的双引号
-    pattern4 = re.compile(r'[^\\]\"')
+    pattern4 = re.compile(r'[^\\]"')
     replace_list4 = pattern4.findall(temp_result3)
     temp_result4 = temp_result3
     for replace in replace_list4:
@@ -89,69 +89,33 @@ def convert_str_to_xml(base_str) -> str:
     # 匹配未转义的 &quot;
     pattern5 = re.compile(r'[^\\]&quot;')
     replace_list5 = pattern5.findall(temp_result4)
-    temp_result5 = temp_result4
+    temp_result6 = temp_result4
     for replace in replace_list5:
-        temp_result5 = replace_quotation_to_xml(temp_result5, replace)
+        temp_result6 = replace_quotation_to_xml(temp_result6, replace)
 
-    # 删除字符串结尾的换行和空白符号
-    pattern6 = re.compile(r'(\n$)|(\s$)')
-    temp_result6 = re.sub(pattern6, "", temp_result5)
-
-    # 将换行符替换为 \\n 和 n
-    pattern7 = re.compile(r'\n')
-    enter1 = "\\\n"
-    enter2 = "n"
-    temp_result7 = re.subn(pattern7, enter1, temp_result6)[0]
-    temp_result8 = re.subn(pattern7, enter2, temp_result7)[0]
+    # 将未转义的“”‘’ 替换为 \“\”\‘\’
+    # pattern6 = re.compile(r'[^\\]([“”‘’])')
+    # replace_list6 = pattern6.findall(temp_result5)
+    # temp_result6 = temp_result5
+    # for replace in replace_list6:
+    #     temp_result6 = replace_quotation_to_xml(temp_result6, replace)
 
     # 将非换行空格替换为普通空格
-    pattern8 = re.compile(r'\xa0')
-    temp_result9 = re.sub(pattern8, " ", temp_result8)
-    return temp_result9
+    pattern7 = re.compile(r'[\xa0\u00a0]')
+    temp_result7 = re.sub(pattern7, " ", temp_result6)
 
-# 下面注释掉的是历史处理逻辑，保留以便后续扩展
-# # 将 "（未转义的"） 替换为 \"
-# pattern6 = re.compile(r'[^\\](“)')
-# replace_list6 = pattern6.findall(temp_result5)
-# temp_result6 = temp_result5
-# for replace in replace_list6:
-#     temp_result6 = replace_quotation_to_xml(temp_result6, replace)
-#
-# # 将 "（未转义的"） 替换为 \"
-# pattern7 = re.compile(r'[^\\](”)')
-# replace_list7 = pattern7.findall(temp_result6)
-# temp_result7 = temp_result6
-# for replace in replace_list7:
-#     temp_result7 = replace_quotation_to_xml(temp_result7, replace)
-#
-# # 将 "（未转义的"） 替换为 \"
-# pattern8 = re.compile(r'[^\\](‘)')
-# replace_list8 = pattern8.findall(temp_result7)
-# temp_result8 = temp_result7
-# for replace in replace_list8:
-#     temp_result8 = replace_quotation_to_xml(temp_result8, replace)
-#
-# # 将 "（未转义的"） 替换为 \"
-# pattern9 = re.compile(r'[^\\](’)')
-# replace_list9 = pattern9.findall(temp_result8)
-# temp_result9 = temp_result8
-# for replace in replace_list9:
-#     temp_result9 = replace_quotation_to_xml(temp_result9, replace)
-#
-# # 删除字符串结尾的换行和空白符号
-# pattern10 = re.compile(r'(\n$)|(\s$)')
-# # 字符串开头的空白符号暂时保留
-# # pattern6 = re.compile(r'(^\s)|(\n$)|(\s$)')
-# temp_result10 = re.sub(pattern10, "", temp_result9)
-#
-# # 将 换行符 替换为 \n
-# pattern11 = re.compile(r'\n')
-# enter1 = "\\\n"
-# enter2 = "n"
-# temp_result11 = re.subn(pattern11, enter1, temp_result10)[0]
-# temp_result12 = re.subn(pattern11, enter2, temp_result11)[0]
-#
-# # 将 非换行空格 替换为 普通空格
-# pattern12 = re.compile(r' ')
-# temp_result13 = re.sub(pattern12, " ", temp_result12)
-# return temp_result13
+    # 删除字符串结尾的空白符号（包括空格、制表符、回车、换行）
+    pattern8 = re.compile(r'[ \t\r\n]+$')
+    temp_result9 = re.sub(pattern8, "", temp_result7)
+
+    # 删除字符串开头的换行和空白符号
+    # pattern9 = re.compile(r'(^\s)|(\n$)|(\s$)')
+    # temp_result9 = re.sub(pattern9, "", temp_result8)
+
+    # 将换行符替换为 \\n 和 n
+    pattern10 = re.compile(r'\n')
+    enter1 = "\\\n"
+    enter2 = "n"
+    temp_result10 = re.subn(pattern10, enter1, temp_result9)[0]
+    temp_result11 = re.subn(pattern10, enter2, temp_result10)[0]
+    return temp_result11
