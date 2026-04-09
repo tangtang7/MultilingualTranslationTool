@@ -36,6 +36,8 @@ def update_xml_value(xml_path, keys, values):
                 break
         # 如果 xml 中没有该 key，则追加新节点
         if not found:
+            # 追加前插入换行符，保证每个<string>前有换行
+            xml_doc.documentElement.appendChild(xml_doc.createTextNode('\n    '))
             new_node = xml_doc.createElement('string')
             new_node.setAttribute('name', key)
             new_text = xml_doc.createTextNode(str(values[idx]))
@@ -97,5 +99,34 @@ def update_xml_string_array(xml_path, array_name, items):
         arr_node.appendChild(item_node)
     # 末尾换行和间隔
     arr_node.appendChild(xml_doc.createTextNode('\n    '))
+    with open(xml_path, 'wb') as f:
+        f.write(xml_doc.toxml('utf-8'))
+
+def sort_xml_strings_and_arrays(xml_path):
+    """
+    对 xml 文件中的 <string> 和 <string-array> 节点按 name 属性字母顺序排序。
+    :param xml_path: xml 文件路径
+    """
+    if not os.path.exists(xml_path):
+        Log.error(f"xml 文件不存在: {xml_path}")
+        return
+    xml_doc = xml.dom.minidom.parse(xml_path)
+    root = xml_doc.documentElement
+    # 收集所有 <string> 和 <string-array> 节点
+    string_nodes = [n for n in root.getElementsByTagName('string')]
+    array_nodes = [n for n in root.getElementsByTagName('string-array')]
+    # 按 name 属性排序
+    string_nodes_sorted = sorted(string_nodes, key=lambda n: n.getAttribute('name'))
+    array_nodes_sorted = sorted(array_nodes, key=lambda n: n.getAttribute('name'))
+    # 移除所有 <string> 和 <string-array> 节点
+    for n in string_nodes + array_nodes:
+        root.removeChild(n)
+    # 重新 append 排序后的节点，并在每个节点前插入换行符
+    for n in string_nodes_sorted + array_nodes_sorted:
+        root.appendChild(xml_doc.createTextNode('\n    '))
+        root.appendChild(n)
+    # 在所有节点后额外增加一个换行符，保证最后一个节点后有\n
+    root.appendChild(xml_doc.createTextNode('\n'))
+    # 写回 xml 文件
     with open(xml_path, 'wb') as f:
         f.write(xml_doc.toxml('utf-8'))
