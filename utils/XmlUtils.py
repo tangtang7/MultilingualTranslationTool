@@ -32,6 +32,11 @@ def _write_pretty_xml(xml_doc, xml_path):
     xml_text = xml_text.replace('?>\n<resources>', '?>\n<resources>')
     xml_text = xml_text.replace('?><resources>', '?>\n<resources>')
 
+    # <resources> 后保证至少有一个换行 + 缩进（4空格），避免 <resources><!--comment--> 在同一行
+    # 并保证 <resources> 下的首个节点缩进与后续节点一致
+    xml_text = xml_text.replace('<resources><!--', '<resources>\n    <!--')
+    xml_text = xml_text.replace('<resources><', '<resources>\n    <')
+
     if not xml_text.endswith('\n'):
         xml_text += '\n'
 

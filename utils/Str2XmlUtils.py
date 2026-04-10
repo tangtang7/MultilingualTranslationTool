@@ -105,6 +105,30 @@ def convert_str_to_xml(base_str):
     pattern7 = re.compile(r'[\xa0|\u00a0| ]')
     temp_result7 = re.sub(pattern7, r' ', temp_result6)
 
+    # 将多个未编号的格式化占位符 %s / %d 转换为编号形式 %1$s / %1$d ...
+    # 说明：
+    # - 仅处理“未编号”的 %s/%d，避免重复编号已存在的 %1$s / %2$d
+    # - 跳过字面量 %%
+    # - 严格按从左到右出现顺序依次编号（%s 与 %d 共用同一序列）
+    def _number_format_placeholders(text):
+        counter = [1]
+
+        def repl(m):
+            t = m.group(1)  # s 或 d
+            rep = '%%%d$%s' % (counter[0], t)
+            counter[0] += 1
+            return rep
+
+        # 匹配：
+        # - 一个 %，且它前面不是另一个 %（避免匹配到 %%s 的第二个 %）
+        # - 后面不是 %（排除 %%）
+        # - 后面也不是类似 1$ 的编号（排除 %1$s）
+        # - 最终是 s 或 d
+        pattern = re.compile(r'(?<!%)%(?!%)(?!\d+\$)([sd])')
+        return pattern.sub(repl, text)
+
+    temp_result7 = _number_format_placeholders(temp_result7)
+
     # 删除字符串结尾的空白符号（包括空格、制表符、回车、换行）
     pattern8 = re.compile(r'[ \t\r\n]+$')
     temp_result9 = re.sub(pattern8, r'', temp_result7)
