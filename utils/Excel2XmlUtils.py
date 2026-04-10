@@ -55,12 +55,16 @@ def read_excel(excel_path):
     return header, rows
 
 # 读取 Excel，每行以本行“所属模组”为 xml 文件名，按各语言写入对应 xml。
-def excel2xml(xml_path, excel_path):
+def excel2xml(xml_path, excel_path, module_filter=None):
     """
     读取 Excel，每行以本行“所属模组”列为 xml 文件名，按各语言以Android Key 为 name 写入对应 xml。
     若缺少 “所属模组” 或 “Android Key” 列，报错提示且跳过。
     :param xml_path: xml 文件路径
     :param excel_path: 表格文件路径
+    :param module_filter:
+        - None / ''：不筛选，处理表格中所有“所属模组”
+        - str：仅处理该“所属模组”对应的 xml
+        - list/tuple/set[str]：仅处理这些“所属模组”对应的 xml
     """
     # 读取 Excel 内容
     header, rows = read_excel(excel_path)
@@ -101,6 +105,19 @@ def excel2xml(xml_path, excel_path):
     # 数组项收集: {(file_path, lang, array_name): [(index, value)]}
     array_kv = defaultdict(list)
 
+    # 统一 module_filter 为 set，便于 O(1) 判断
+    module_filter_set = None
+    if module_filter is None or module_filter == '':
+        module_filter_set = None
+    elif isinstance(module_filter, str):
+        module_filter_set = {module_filter.strip()}
+    elif isinstance(module_filter, (list, tuple, set)):
+        module_filter_set = {str(x).strip() for x in module_filter if str(x).strip()}
+        if not module_filter_set:
+            module_filter_set = None
+    else:
+        raise TypeError("module_filter 仅支持 None / str / list|tuple|set[str]")
+
     # 遍历每一行数据
     for row in rows:
         # 获取所属模组
@@ -109,6 +126,10 @@ def excel2xml(xml_path, excel_path):
         key_value = row[key_col_idx].strip()
         # 跳过无效行
         if not module_value or not key_value or key_value == '仅适用于iOS':
+            continue
+
+        # 可选：按所属模组过滤
+        if module_filter_set is not None and module_value not in module_filter_set:
             continue
         # 以所属模组命名 xml 文件
         xml_name = "%s.xml" % module_value
@@ -147,11 +168,15 @@ def excel2xml(xml_path, excel_path):
             update_xml_string_array(file_path, array_name, items)
             Log.debug("写入 %s，string-array name=%s，items=%s" % (file_path, array_name, items))
 
-def get_all_xml_files_from_excel(xml_path, excel_path):
+def get_all_xml_files_from_excel(xml_path, excel_path, module_filter=None):
     """
     获取表格中所有涉及的 xml 文件路径。
     :param xml_path: xml 文件根目录
     :param excel_path: 表格文件路径
+    :param module_filter:
+        - None / ''：不筛选，返回表格涉及的所有 xml
+        - str：仅返回该“所属模组”对应的 xml
+        - list/tuple/set[str]：仅返回这些“所属模组”对应的 xml
     :return: set of xml file paths
     """
     header, rows = read_excel(excel_path)
@@ -176,11 +201,30 @@ def get_all_xml_files_from_excel(xml_path, excel_path):
         "no-NO（挪威语）": ["values-no"]
     }
     lang_col_map = {col: idx for idx, col in enumerate(header) if col in lang_map}
+
+    # 统一 module_filter 为 set，便于 O(1) 判断
+    module_filter_set = None
+    if module_filter is None or module_filter == '':
+        module_filter_set = None
+    elif isinstance(module_filter, str):
+        module_filter_set = {module_filter.strip()}
+    elif isinstance(module_filter, (list, tuple, set)):
+        module_filter_set = {str(x).strip() for x in module_filter if str(x).strip()}
+        if not module_filter_set:
+            module_filter_set = None
+    else:
+        raise TypeError("module_filter 仅支持 None / str / list|tuple|set[str]")
+
     xml_files = set()
     for row in rows:
         module_value = row[module_col_idx].strip()
         if not module_value:
             continue
+
+        # 可选：按所属模组过滤
+        if module_filter_set is not None and module_value not in module_filter_set:
+            continue
+
         xml_name = "%s.xml" % module_value
         for lang, dir_names in lang_map.items():
             if lang not in lang_col_map:

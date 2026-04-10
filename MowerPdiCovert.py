@@ -12,18 +12,22 @@ def main():
     # excel_path = "/Users/ninebot/Desktop/after_sale_app/MultilingualTranslation/s1.xls"
     # excel_path = "/Users/ninebot/Desktop/after_sale_app/MultilingualTranslation/s2.xlsx"
     excel_path = "/Users/ninebot/Desktop/after_sale_app/MultilingualTranslation/s3.csv"
-    # 执行批量导入
-    excel2xml(xml_path, excel_path)
-    # 执行批量排序
-    sort_xml_files_batch(xml_path, excel_path)
+    # 可选：只处理某个“所属模组”（不传/为空则处理全部）
+    module_filter = ["strings_device", "strings_yaml"]  # 例如：["strings_device", "strings_yaml"]
 
-def sort_xml_files_batch(xml_path, excel_path):
+    # 执行批量导入
+    excel2xml(xml_path, excel_path, module_filter=module_filter)
+    # 执行批量排序
+    sort_xml_files_batch(xml_path, excel_path, module_filter=module_filter)
+
+def sort_xml_files_batch(xml_path, excel_path, module_filter=None):
     """
     批量对 excel 文件所有涉及的 xml 文件进行排序。
     :param xml_path: xml 文件根目录
     :param excel_path: 表格文件路径
+    :param module_filter: 可选；指定“所属模组”字符串，仅排序该模组对应的 xml；不传/为空则排序全部
     """
-    xml_file_list = get_all_xml_files_from_excel(xml_path, excel_path)
+    xml_file_list = get_all_xml_files_from_excel(xml_path, excel_path, module_filter=module_filter)
     for file_path in xml_file_list:
         sort_xml_strings_and_arrays(file_path)
 
