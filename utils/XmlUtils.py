@@ -5,6 +5,7 @@ Xml 相关操作工具，包括 xml 文件的 key-value 更新与追加。
 import os
 import xml.dom.minidom
 from utils.LogUtils import Log
+from utils import to_text
 
 def update_xml_value(xml_path, keys, values):
     """
@@ -32,7 +33,7 @@ def update_xml_value(xml_path, keys, values):
             # 找到匹配的 key 且节点有内容
             if key == xml_key and node.firstChild is not None:
                 # 替换内容为 values 中对应的值
-                node.firstChild.data = str(values[idx])
+                node.firstChild.data = to_text(values[idx])
                 found = True
                 break
         # 如果 xml 中没有该 key，则追加新节点
@@ -41,7 +42,7 @@ def update_xml_value(xml_path, keys, values):
             xml_doc.documentElement.appendChild(xml_doc.createTextNode('\n    '))
             new_node = xml_doc.createElement('string')
             new_node.setAttribute('name', key)
-            new_text = xml_doc.createTextNode(str(values[idx]))
+            new_text = xml_doc.createTextNode(to_text(values[idx]))
             new_node.appendChild(new_text)
             xml_doc.documentElement.appendChild(new_node)
             Log.info("追加新 key: %s -> %s" % (key, values[idx]))
@@ -90,13 +91,13 @@ def update_xml_string_array(xml_path, array_name, items):
         # 添加换行和间隔（首项前也加）
         arr_node.appendChild(xml_doc.createTextNode('\n        '))
         # 添加注释 <!--数字-->
-        comment = xml_doc.createComment(str(idx))
+        comment = xml_doc.createComment(to_text(idx))
         arr_node.appendChild(comment)
         # 注释和 item 之间换行和间隔
         arr_node.appendChild(xml_doc.createTextNode('\n        '))
         item_node = xml_doc.createElement('item')
         if idx in idx_map:
-            item_node.appendChild(xml_doc.createTextNode(str(idx_map[idx])))
+            item_node.appendChild(xml_doc.createTextNode(to_text(idx_map[idx])))
         arr_node.appendChild(item_node)
     # 末尾换行和间隔
     arr_node.appendChild(xml_doc.createTextNode('\n    '))

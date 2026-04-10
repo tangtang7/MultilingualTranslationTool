@@ -14,9 +14,8 @@
 
 ## 依赖环境
 
-- Python 2.7+（当前工程代码兼容 Python 2.7 与 Python 3）
-  - macOS 可能默认 `python` 指向 Python 2.7，可用 `python --version` 查看
-  - 若你的环境使用 Python 3，请用 `python3` 执行脚本
+- Python 2.7 / Python 3 均可运行（推荐 Python 3）
+  - macOS 可用 `python --version` / `python3 --version` 查看版本
 - [xlrd](https://pypi.org/project/xlrd/)（用于读取 .xls 格式的 Excel 文件）  
   安装命令：`pip install xlrd`
 - [openpyxl](https://pypi.org/project/openpyxl/)（用于读取 .xlsx 格式的 Excel 文件）  
@@ -24,8 +23,22 @@
 
 ### 安装依赖
 
+Python 3：
+
 ```bash
 pip install xlrd openpyxl
+```
+
+Python 2.7（注意 openpyxl 新版本可能不再支持 Py2，请使用兼容版本）：
+
+```bash
+pip install xlrd "openpyxl<3"
+```
+
+如果你使用较新的 `xlrd` 后出现无法读取 `.xls` 的情况，可尝试安装兼容旧格式的版本：
+
+```bash
+pip install "xlrd<2"
 ```
 
 ## 目录结构说明
@@ -62,6 +75,9 @@ pip install xlrd openpyxl
 ## 常见问题
 
 - 如果运行时报 `ImportError: No module named 'xlrd'` 或 `No module named 'openpyxl'`，请先安装依赖。
+- Python 2.7 环境：
+  - 读取 `.xlsx` 依赖 `openpyxl`，若安装最新版 `openpyxl` 失败/无法导入，请改用：`pip install "openpyxl<3"`。
+  - `xlrd` 仅用于读取 `.xls`；`.xlsx` 是由 `openpyxl` 读取的，与 `xlrd` 是否支持 `.xlsx` 无关。
 - 如遇其它问题请联系维护者。
 
 ---

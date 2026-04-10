@@ -5,11 +5,13 @@ Excel 读取与批量写入 xml 的工具。
 import os
 import csv
 import re
+import io
 from utils.XmlUtils import update_xml_value
 from utils.LogUtils import Log
 from collections import defaultdict
 from utils.Str2XmlUtils import convert_str_to_xml
 from utils.XmlUtils import update_xml_string_array
+from utils import string_types, to_text
 
 def read_excel(excel_path):
     """
@@ -35,20 +37,28 @@ def read_excel(excel_path):
         # 只读方式打开
         wb = openpyxl.load_workbook(excel_path, read_only=True, data_only=True)
         ws = wb.active
-        for i, row in enumerate(ws.iter_rows(values_only=True)):
+        # Python2 + openpyxl 兼容：避免使用 values_only=True
+        for i, row in enumerate(ws.iter_rows()):
+            values = [to_text(cell.value) for cell in row]
             if i == 0:
-                header = [str(cell) if cell is not None else '' for cell in row]
+                header = values
             else:
-                rows.append([str(cell) if cell is not None else '' for cell in row])
+                rows.append(values)
     # csv 处理 .csv 文件
     elif ext == '.csv':
-        with open(excel_path, newline='', encoding='utf-8-sig') as csvfile:
+        # Python2 兼容：使用 io.open + utf-8 解码，并手动处理 BOM（utf-8-sig）
+        with io.open(excel_path, mode='r', encoding='utf-8', errors='ignore') as csvfile:
             reader = csv.reader(csvfile)
             for i, row in enumerate(reader):
+                # row 在 Py2 下可能是 unicode 列表
+                row_values = [to_text(cell) for cell in row]
+                # 第一列可能含 BOM \ufeff
+                if row_values:
+                    row_values[0] = row_values[0].lstrip(u'\ufeff')
                 if i == 0:
-                    header = [str(cell) if cell is not None else '' for cell in row]
+                    header = row_values
                 else:
-                    rows.append([str(cell) if cell is not None else '' for cell in row])
+                    rows.append(row_values)
     # 不支持的格式报错
     else:
         raise Exception('仅支持 .xls、.xlsx 或 .csv 文件')
@@ -109,10 +119,10 @@ def excel2xml(xml_path, excel_path, module_filter=None):
     module_filter_set = None
     if module_filter is None or module_filter == '':
         module_filter_set = None
-    elif isinstance(module_filter, str):
-        module_filter_set = {module_filter.strip()}
+    elif isinstance(module_filter, string_types):
+        module_filter_set = {to_text(module_filter).strip()}
     elif isinstance(module_filter, (list, tuple, set)):
-        module_filter_set = {str(x).strip() for x in module_filter if str(x).strip()}
+        module_filter_set = {to_text(x).strip() for x in module_filter if to_text(x).strip()}
         if not module_filter_set:
             module_filter_set = None
     else:
@@ -206,10 +216,10 @@ def get_all_xml_files_from_excel(xml_path, excel_path, module_filter=None):
     module_filter_set = None
     if module_filter is None or module_filter == '':
         module_filter_set = None
-    elif isinstance(module_filter, str):
-        module_filter_set = {module_filter.strip()}
+    elif isinstance(module_filter, string_types):
+        module_filter_set = {to_text(module_filter).strip()}
     elif isinstance(module_filter, (list, tuple, set)):
-        module_filter_set = {str(x).strip() for x in module_filter if str(x).strip()}
+        module_filter_set = {to_text(x).strip() for x in module_filter if to_text(x).strip()}
         if not module_filter_set:
             module_filter_set = None
     else:

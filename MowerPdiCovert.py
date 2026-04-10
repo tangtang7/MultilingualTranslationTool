@@ -13,7 +13,7 @@ def main():
     # excel_path = "/Users/ninebot/Desktop/after_sale_app/MultilingualTranslation/s2.xlsx"
     excel_path = "/Users/ninebot/Desktop/after_sale_app/MultilingualTranslation/s3.csv"
     # 可选：只处理某个“所属模组”（不传/为空则处理全部）
-    module_filter = ["strings_device", "strings_yaml"]  # 例如：["strings_device", "strings_yaml"]
+    module_filter = ["strings_device"]  # 例如：["strings_device", "strings_yaml", "strings_no_translation"]
 
     # 执行批量导入
     excel2xml(xml_path, excel_path, module_filter=module_filter)
