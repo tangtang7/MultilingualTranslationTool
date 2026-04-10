@@ -48,6 +48,11 @@ pip install "xlrd<2"
 - `utils/Str2XmlUtils.py`：表格字符串转换为 Android 格式字符串工具。
 - `utils/XmlUtils.py`：Xml 相关操作工具，包括 xml 文件的 key-value 更新与追加。
 - `utils/LogUtils.py`：日志工具。
+- `utils/__init__.py`：将 `utils` 目录标记为 Python 包，并提供少量 Python2/3 兼容辅助方法。
+- `venv/`：可选的 Python 虚拟环境目录（如果你使用虚拟环境运行）。
+- `__pycache__/` / `utils/__pycache__/`：Python 3 运行时生成的缓存目录（自动生成）。
+- `*.pyc` / `__init__.pyc`：Python 2/3 运行时生成的字节码缓存文件（自动生成）。
+- `.idea/`：JetBrains 系列 IDE（PyCharm/IDEA）工程配置目录（自动生成）。
 
 ## 使用方法
 
@@ -71,6 +76,10 @@ pip install "xlrd<2"
   - 字符串：仅处理该模组（例如：`"strings_device"`）
   - 字符串数组：仅处理这些模组（例如：`["strings_device", "strings_yaml"]`）
 - value 写入时会自动进行占位符转换（如 `%s` → `%1$s`）和特殊字符转义（如 `&` → `&amp;`）。
+- 工具写回 xml 时会进行基础格式化：
+  - `<?xml ...?>` 头部声明后强制换行
+  - `<resources>` 独占一行开始
+  - 文件末尾保证以换行结束（便于 diff）
 
 ## 常见问题
 
