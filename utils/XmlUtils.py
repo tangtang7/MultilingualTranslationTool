@@ -7,6 +7,40 @@ import xml.dom.minidom
 from utils.LogUtils import Log
 from utils import to_text
 
+def _write_pretty_xml(xml_doc, xml_path):
+    """将 minidom 文档按更可读的格式写回文件。
+
+    目标效果：
+    - 保留 xml 头部声明，并在其后添加换行
+    - <resources> 作为一行开始
+    - 文件最后以换行结束
+    """
+    xml_bytes = xml_doc.toxml('utf-8')
+    try:
+        xml_text = xml_bytes.decode('utf-8')
+    except Exception:
+        # Python2 下可能已经是 str(bytes)
+        xml_text = xml_bytes
+
+    # minidom.toxml() 通常会输出：<?xml ...?><resources>... 这里做一次轻量格式化
+    if isinstance(xml_text, bytes):
+        try:
+            xml_text = xml_text.decode('utf-8')
+        except Exception:
+            pass
+    xml_text = xml_text.replace('?><?', '?>\n<?')
+    xml_text = xml_text.replace('?>\n<resources>', '?>\n<resources>')
+    xml_text = xml_text.replace('?><resources>', '?>\n<resources>')
+
+    if not xml_text.endswith('\n'):
+        xml_text += '\n'
+
+    with open(xml_path, 'wb') as f:
+        if isinstance(xml_text, bytes):
+            f.write(xml_text)
+        else:
+            f.write(xml_text.encode('utf-8'))
+
 def update_xml_value(xml_path, keys, values):
     """
     更新或追加 <string> 节点。若 xml 文件不存在则跳过。若 key 已存在则替换，否则追加。
@@ -46,10 +80,8 @@ def update_xml_value(xml_path, keys, values):
             new_node.appendChild(new_text)
             xml_doc.documentElement.appendChild(new_node)
             Log.info("追加新 key: %s -> %s" % (key, values[idx]))
-    # 以二进制写入
-    with open(xml_path, 'wb') as f:
-        # 保存修改后的 xml 内容
-        f.write(xml_doc.toxml('utf-8'))
+    # 以更易读的格式写回
+    _write_pretty_xml(xml_doc, xml_path)
 
 def update_xml_string_array(xml_path, array_name, items):
     """
@@ -101,8 +133,7 @@ def update_xml_string_array(xml_path, array_name, items):
         arr_node.appendChild(item_node)
     # 末尾换行和间隔
     arr_node.appendChild(xml_doc.createTextNode('\n    '))
-    with open(xml_path, 'wb') as f:
-        f.write(xml_doc.toxml('utf-8'))
+    _write_pretty_xml(xml_doc, xml_path)
 
 def sort_xml_strings_and_arrays(xml_path):
     """
@@ -114,6 +145,17 @@ def sort_xml_strings_and_arrays(xml_path):
         return
     xml_doc = xml.dom.minidom.parse(xml_path)
     root = xml_doc.documentElement
+
+    # 清理 root 下与 string/string-array 相邻的空白文本节点，避免排序后出现多余空行/空格
+    # 仅删除“纯空白（空格/\t/\r/\n）”的 Text 节点；保留注释等其它节点
+    children = list(root.childNodes)
+    for child in children:
+        if child.nodeType == child.TEXT_NODE:
+            try:
+                if child.data is not None and child.data.strip() == '':
+                    root.removeChild(child)
+            except Exception:
+                pass
     # 收集所有 <string> 和 <string-array> 节点
     string_nodes = [n for n in root.getElementsByTagName('string')]
     array_nodes = [n for n in root.getElementsByTagName('string-array')]
@@ -123,6 +165,16 @@ def sort_xml_strings_and_arrays(xml_path):
     # 移除所有 <string> 和 <string-array> 节点
     for n in string_nodes + array_nodes:
         root.removeChild(n)
+
+    # 再次清理一遍（移除节点后，可能遗留空白文本节点）
+    children = list(root.childNodes)
+    for child in children:
+        if child.nodeType == child.TEXT_NODE:
+            try:
+                if child.data is not None and child.data.strip() == '':
+                    root.removeChild(child)
+            except Exception:
+                pass
     # 重新 append 排序后的节点，并在每个节点前插入换行符
     for n in string_nodes_sorted + array_nodes_sorted:
         root.appendChild(xml_doc.createTextNode('\n    '))
@@ -130,5 +182,4 @@ def sort_xml_strings_and_arrays(xml_path):
     # 在所有节点后额外增加一个换行符，保证最后一个节点后有\n
     root.appendChild(xml_doc.createTextNode('\n'))
     # 写回 xml 文件
-    with open(xml_path, 'wb') as f:
-        f.write(xml_doc.toxml('utf-8'))
+    _write_pretty_xml(xml_doc, xml_path)
