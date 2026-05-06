@@ -105,8 +105,9 @@ def convert_str_to_xml(base_str):
     pattern7 = re.compile(r'[\xa0|\u00a0| ]')
     temp_result7 = re.sub(pattern7, r' ', temp_result6)
 
-    # 将多个未编号的格式化占位符 %s / %d 转换为编号形式 %1$s / %1$d ...
+    # 将“多个”未编号的格式化占位符 %s / %d 转换为编号形式 %1$s / %1$d ...
     # 说明：
+    # - 只有当同一行出现 2 个及以上“未编号”的 %s/%d 时才进行编号；若只有 1 个则保持 %s/%d 不变
     # - 仅处理“未编号”的 %s/%d，避免重复编号已存在的 %1$s / %2$d
     # - 跳过字面量 %%
     # - 严格按从左到右出现顺序依次编号（%s 与 %d 共用同一序列）
@@ -125,6 +126,10 @@ def convert_str_to_xml(base_str):
         # - 后面也不是类似 1$ 的编号（排除 %1$s）
         # - 最终是 s 或 d
         pattern = re.compile(r'(?<!%)%(?!%)(?!\d+\$)([sd])')
+        matches = pattern.findall(text)
+        # 只有当出现“多个”未编号占位符时才编号；单个时保持原样
+        if len(matches) <= 1:
+            return text
         return pattern.sub(repl, text)
 
     temp_result7 = _number_format_placeholders(temp_result7)
